@@ -4,8 +4,11 @@ This file combines the two applications.
 
 import asyncio
 import logging
+import settings as settings
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG if settings.ENV_MODE != "production" else logging.ERROR
+)
 
 import uvicorn
 
@@ -29,7 +32,12 @@ class Server(uvicorn.Server):
 if __name__ == "__main__":
     "Run the API and the scheduler"
     config = uvicorn.Config(
-        api, host="0.0.0.0", port=3000, log_level="debug", loop="asyncio", reload=True
+        api,
+        host="0.0.0.0",
+        port=settings.PORT,
+        log_level="debug" if settings.ENV_MODE != "production" else None,
+        loop="asyncio",
+        reload=settings.ENV_MODE != "production",
     )
     server = Server(config=config)
 
