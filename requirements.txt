@@ -1,0 +1,6 @@
+fastapi<1
+uvicorn<1
+slack_bolt
+aiohttp
+python-dotenv
+rocketry
