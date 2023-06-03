@@ -5,7 +5,7 @@ A Slack bot experiment, using FastAPI + Slack Bolt + Rocketry, running async wit
 
 ## Getting started
 
-You'll need:
+You'll need
 - Python 3
 - ngrok
 - A Slack bot
@@ -14,7 +14,7 @@ You'll need:
 - Run ngrok
 `./ngrok http 3000`
 
-- Create a Slack bot from this manifest
+- Create a [new Slack app](https://api.slack.com/apps) from this manifest
 ```
 display_information:
   name: MySuperTest
@@ -55,20 +55,39 @@ settings:
   token_rotation_enabled: false
 ```
 
-- Create `.env` with `cp .env.example .env`
+- Create `.env` with `cp ./.env.example ./.env`
 - Go to your Slack app `OAuth & Permissions` and `Install the app` into your workspace
 - Copy the `Bot User OAuth Token` value into `.env` at `SLACK_BOT_TOKEN`
 - Go to your Slack app `Basic Information`, scroll to `App-Level Tokens`
 - Use `Generate Token and Scopes` to create an app token, add some scopes, click on `Done`
 - Copy the newly created `Token` into `.env` at `SLACK_APP_TOKEN`
 
-- Install and run the server
+- Install dependencies and run the server
 ```
 pip install -r requirements.txt
 python3 ./src/app.py
 ```
 - Go to your Slack, invite your bot somewhere, type `@MySuperBot` or `/foo`
-- Enjoy
+- Watch the bot in action
+
+
+## 5 minutes deployment on [railway.app](https://railway.app) 🚀💨
+- Go to [railway.app](https://railway.app)
+- Click on `Start a New Project`
+- Select `Deploy from GitHub repo` and go through the connection through GitHub
+- Once you get back on Railway - `Add a new service` (you might have to right click) and select `GitHub Repo`
+- Select this project
+- Once it's created, click on the service and add variables in the "Variables" tabs
+  - ENV_MODE = `production`
+  - NUM_WORKERS = `1`
+  - SLACK_APP_TOKEN = `[your app slack token]`
+  - SLACK_BOT_TOKEN = `[your bot slack token]`
+- Open the `Settings` tab of your service
+- Scroll to the `Deploy` section
+  - Set `Start Command` to `python3 ./src/app.py`
+  - Set `Healtcheck Path` to `/health`
+
+A deployment should automatically trigger, once it's done - service should be green and your bot should be deployed 🚀
 
 ## TODO
 - Better file organisation + DI to avoid coupling between slack / scheduler
