@@ -1,7 +1,8 @@
 
 # FastAPI + Slack + Rocketry (async)
 
-A Slack bot experiment, using FastAPI + Slack Bolt + Rocketry, running async with uvicorn
+A Slack bot experiment, using FastAPI (unvcorn) + Slack Bolt + Rocketry, running async with asyncio.
+Also contains a pseudo-clean organisation with an inversion of dependency and injection with kink.
 
 ## Getting started
 
@@ -88,6 +89,3 @@ python3 ./src/app.py
   - Set `Healtcheck Path` to `/health`
 
 A deployment should automatically trigger, once it's done - service should be green and your bot should be deployed 🚀
-
-## TODO
-- Better file organisation + DI to avoid coupling between slack / scheduler
