@@ -4,3 +4,4 @@ slack_bolt
 aiohttp
 python-dotenv
 rocketry
+kink

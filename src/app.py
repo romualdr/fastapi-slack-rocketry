@@ -1,48 +1,52 @@
-"""
-This file combines the two applications.
-"""
-
 import asyncio
-import logging
-import settings as settings
+import signal
+from logger import logger
+from typing import List, Optional
+from kink import inject
+from dependencies import IAsynchronousModule
 
-logging.basicConfig(
-    level=logging.DEBUG if settings.ENV_MODE != "production" else logging.ERROR
-)
-
-import uvicorn
-
-from scheduler.public import scheduler
-from slack.public import slack_socket
-from api.public import api
+# Python don't see files / classes that are not imported
+# As we're using dependency injection with kink, those files are never imported anywhere
+# As a result, we need to import them to reference them into kink
+# and be available for dependency injection (mostly here, in our main)
+import modules.api  # noqa
+import modules.messaging  # noqa
+import modules.scheduler  # noqa
 
 
-class Server(uvicorn.Server):
-    """Customized uvicorn.Server
+@inject()
+class Application:
+    modules: List[IAsynchronousModule]
+    loop: asyncio.AbstractEventLoop
+    signals: List[signal.Signals] = [
+        signal.SIGINT,  # Unix signal 2. Sent by Ctrl+C.
+        signal.SIGTERM,  # Unix signal 15. Sent by `kill <pid>`.
+    ]
 
-    Uvicorn server overrides signals and we need to include
-    Rocketry to the signals."""
+    def __init__(self, modules: List[IAsynchronousModule]) -> None:
+        self.modules = modules
+        self.loop = asyncio.get_event_loop()
+        self.setup()
 
-    def handle_exit(self, sig: int, frame) -> None:
-        scheduler.session.shut_down()
-        loop.stop()
-        return super().handle_exit(sig, frame)
+    def setup(self):
+        for _signal in self.signals:
+            self.loop.add_signal_handler(_signal, self.stop, _signal)
+
+    def run(self):
+        logger.info("Running application with event loop")
+        for module in self.modules:
+            self.loop.create_task(module.start())
+        self.loop.run_forever()
+
+    def stop(self, _signal: Optional[int]):
+        logger.info("Stopping application ...")
+        awaitables = []
+        for module in self.modules:
+            awaitables.append(module.stop(_signal=_signal))
+        stop = asyncio.wait(awaitables)
+        self.loop.create_task(stop)
+        self.loop.stop()
 
 
 if __name__ == "__main__":
-    "Run the API and the scheduler"
-    config = uvicorn.Config(
-        api,
-        host="0.0.0.0",
-        port=settings.PORT,
-        log_level="debug" if settings.ENV_MODE != "production" else None,
-        loop="asyncio",
-        reload=settings.ENV_MODE != "production",
-    )
-    server = Server(config=config)
-
-    loop = asyncio.get_event_loop()
-    loop.create_task(server.serve())
-    loop.create_task(slack_socket.connect_async())
-    loop.create_task(scheduler.serve())
-    loop.run_forever()
+    Application().run()
