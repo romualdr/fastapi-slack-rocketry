@@ -1,8 +1,6 @@
 from logger import getLogger
-from ssl import SSLContext
-from typing import Any, Coroutine, List, Optional
+from typing import Any, Coroutine, Optional
 from kink import di, inject
-from slack_sdk.http_retry.handler import RetryHandler
 import settings as settings
 from slack_bolt.async_app import AsyncApp
 from slack_bolt.adapter.socket_mode.aiohttp import AsyncSocketModeHandler
